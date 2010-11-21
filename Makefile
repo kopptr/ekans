@@ -16,7 +16,7 @@ LDFLAGS  = -lpthread
 
 MAIN = main
 
-MOD  = slist
+MOD  = slist http_parse
 
 TEST = $(patsubst %, test/bin/%.bin, $(MOD))
 
@@ -34,8 +34,8 @@ test/bin/%.bin: obj/%.o test/%_test.c
 ekans: $(OBJ)
 	$(LD) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
 
-test: $(TEST)
-	
+#test: $(TEST)
+#	
 
 clean:
 	rm -f *~ */*~ obj/* ekans

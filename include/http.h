@@ -24,32 +24,18 @@ typedef union {
       uint8_t      res_type; /* Is the resource a .py file?    */
       long         length;   /* How many bytes is this?        */
       const char * uri;      /* Relative path to the resource. */
-      const char * headers;  /* Text containing HTTP Headers.  */
+      const char * head;     /* Text containing HTTP Headers.  */
       const char * data;     /* Actual HTTP POST data.         */
    }post;
    struct {
       uint8_t type;
       const char * uri;      /* Relative path to the resource. */
-      const char * headers;  /* Text containing HTTP Headers.  */
+      const char * head;     /* Text containing HTTP Headers.  */
    }get, head;
 }http_request;
 
-/* Reads data off of 'client' and returns HTTP data. */
-http_request * read_http_request(SOCK client);
-
-/* This is a prepackaged response for 404 requests. */
-static const char 404_Page[] = "HTTP/1.0 404 Page Not Found\r\n"
-   "\r\n"
-   "<!doctype html>\n"
-   "<html>\n"
-   "  <body>\n"
-   "    <h1>404 -- Page Not Found</h1>\n"
-   "    <p>\n"
-   "      The page you requested could not be located or does not exist.\n"
-   "    </p>\n"
-   "  </body>\n"
-   "</html>\n";
-
-
+/* Reads data off of the 'client' socket and returns HTTP data. On error NULL *
+ * is returned, the socket closed, and errno is potentially set.              */
+http_request * http_read_request(SOCK client);
 
 #endif /* http.h */
