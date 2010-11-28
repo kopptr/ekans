@@ -24,18 +24,32 @@ typedef union {
       uint8_t      res_type; /* Is the resource a .py file?    */
       long         length;   /* How many bytes is this?        */
       const char * uri;      /* Relative path to the resource. */
-      const char * head;     /* Text containing HTTP Headers.  */
+      char ** head;    /* Text containing HTTP Headers.  */
       const char * data;     /* Actual HTTP POST data.         */
    }post;
    struct {
       uint8_t type;
+      uint8_t res_type;      /* What kind of resource is it?   */
       const char * uri;      /* Relative path to the resource. */
-      const char * head;     /* Text containing HTTP Headers.  */
+      char ** head;    /* Text containing HTTP Headers.  */
    }get, head;
 }http_request;
+
+typedef enum {
+   RES_HTML,
+   RES_HPYTHON,
+   RES_PYTHON,
+   RES_CSS,
+   RES_JAVASCRIPT,
+   RES_JPEG,
+   RES_PNG,
+   RES_UNKNOWN
+}http_res_type;
 
 /* Reads data off of the 'client' socket and returns HTTP data. On error NULL *
  * is returned, the socket closed, and errno is potentially set.              */
 http_request * http_read_request(SOCK client);
+
+void http_init_regex(void);
 
 #endif /* http.h */

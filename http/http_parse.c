@@ -1,29 +1,129 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 #include "tcp.h"
 #include "http.h"
 #include "html_prefab.h"
 
 #define false 0
 
+
+/* This file makes heavy use of the POSIX regular expressions library */
+static regex_t http_req_regex, http_uri_regex;
+
+static char * get_regerror(int errcode, regex_t * compiled) {
+   size_t length = regerror(errcode, compiled, NULL, 0);
+   char * buffer = malloc(length);
+   (void)regerror(errcode, compiled, buffer, length);
+   return buffer;
+}
+
+/* DO WORK ALL DAY TOMORROW. YOU HAVE NO EXCUSE TO WORK ON THIS OR PLAY GAMES. *
+ * YOU NEED TO FINISH CRYPTOGRAPHY AND PHYSICS TEAM-DESIGN. NO EXCEPTIONS.     */
+
+void http_init_regex(void) {
+   int r;
+   char * error;
+   r = regcomp(&http_req_regex,
+               "^(GET|HEAD|POST) ([^ ]+)( HTTP/1\\.[10])?",
+               REG_EXTENDED);
+   if (r != 0) {
+      error = get_regerror(r, &http_req_regex);
+      fprintf(stderr, "http request regex: %s\n", error);
+      free(error);
+      exit(1);
+   }
+   r = regcomp(&http_uri_regex,
+               "^/((([a-zA-Z0-9.\\-_+]|%[a-fA-F0-9][a-fA-F0-9])+/)"
+               "*(([a-zA-Z0-9.\\-_+]|%[a-fA-F0-9][a-fA-F0-9])+\\."
+               "([a-zA-Z0-9]+)))?",
+               REG_EXTENDED);
+   if (r != 0) {
+      error = get_regerror(r, &http_uri_regex);
+      fprintf(stderr, "http URI regex: %s\n", error);
+      free(error);
+      exit(1);
+   }
+}
+
+static http_res_type get_res_type(char * ext) {
+   if (strcmp("html", ext) == 0) {
+      return RES_HTML;
+   } else if (strcmp("hpy", ext) == 0) {
+      return RES_HPYTHON;
+   } else if (strcmp("py",  ext) == 0) {
+      return RES_PYTHON;
+   } else if (strcmp("css", ext) == 0) {
+      return RES_CSS;
+   } else if (strcmp("js",  ext) == 0) {
+      return RES_JAVASCRIPT;
+   } else if (strcmp("jpg", ext) == 0) {
+      return RES_JPEG;
+   } else if (strcmp("png", ext) == 0) {
+      return RES_PNG;
+   } else {
+      return RES_UNKNOWN;
+   }
+}
+
+static void unescape_hex(char * str) {
+   char c, * look_ahead;
+   for (look_ahead = str; *look_ahead; look_ahead++, str++) {
+      for (;look_ahead[0] == '.' && look_ahead[1] == '.'; look_ahead++);
+      if (*look_ahead == '%') {
+         if (*(++look_ahead) >= '0' && *look_ahead <= '9') {
+            c = *look_ahead - '0';
+         } else if (*look_ahead >= 'a' && *look_ahead <= 'f') {
+            c = 10 + *look_ahead - 'a';
+         } else if (*look_ahead >= 'A' && *look_ahead <= 'F') {
+            c = 10 + *look_ahead - 'A';
+         } else {
+            fprintf(stderr, "PANIC: %s: %s: line %d\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            exit(1);
+         }
+         c <<= 4;
+         if (*(++look_ahead) >= '0' && *look_ahead <= '9') {
+            c += *look_ahead - '0';
+         } else if (*look_ahead >= 'a' && *look_ahead <= 'f') {
+            c += 10 + *look_ahead - 'a';
+         } else if (*look_ahead >= 'A' && *look_ahead <= 'F') {
+            c += 10 + *look_ahead - 'A';
+         } else {
+            fprintf(stderr, "PANIC: %s: %s: line %d\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            exit(1);
+         }
+         *str = c;
+      } else {
+         *str = *look_ahead;
+      }
+   }
+   *str = '\0';
+}
+
 http_request * http_read_request(SOCK client) {
-   int sysret;
+   int sysret, i, tmp_res_type;
+   http_request * ret;
+   char * http_dat, * tmp_uri, ** tmp_head;
+   regmatch_t matches[16]; /* We shouldn't need more than this. */
 
    /* In the future this will be replaced with a fast memory pool. We have    *
     * allocated an extra 1024 bytes to hold the request data. This way the    *
     * whole thing can be free'd with a single call to free().                 */
-   http_request * ret = malloc(sizeof(http_request) + 1024);
-   char * http_dat, * peek, * set, * tmp_uri;
+   ret = malloc(sizeof(http_request) + 1024 + (12 * sizeof(char **)));
 
    /* malloc() failed, bail out (and I mean BAIL OUT!) */
    if (ret == NULL) {
       goto no_mem;
    }
 
-   /* Set http_dat and peek to point at the 1024 bytes of memory after ret    *
-    * and zero out all of the memory to avoid bad stringops.                  */
-   memset((http_dat = peek = (char *)(ret + 1)), 0, 1024);
+   memset(ret, 0, sizeof(http_request) + 1024 + (12 * sizeof(char **)));
+
+   http_dat = (char *)(ret + 1);
+
+   tmp_head = (char **)(http_dat + 1024);
 
    if ((sysret = recv(client, http_dat, 1023, 0)) == -1) {
       /* Error logging should be placed here. */
@@ -33,52 +133,74 @@ http_request * http_read_request(SOCK client) {
       goto failure;
    }
 
-   /* Isolate the METHOD token and figure out what it is. */
-   *(set = strchr(peek, ' ')) = '\0';
-   if (strcmp(peek, "GET") == 0) {
+   /* This regex is used to validate the http request in a general sense and  *
+    * make sure that it vaguely fits the bill. This regex is also used to get *
+    * the HTTP request method.                                                */
+   if ((sysret = regexec(&http_req_regex, http_dat, 3, matches, 0)) != 0) {
+      goto not_implemented;
+   }
+
+   http_dat[matches[1].rm_eo] = '\0';
+
+   if (strcmp(http_dat, "GET") == 0) {
       ret->type = HTTP_GET;
-   } else if (strcmp(peek, "HEAD") == 0) {
-      ret->type = HTTP_HEAD;
-   } else if (strcmp(peek, "POST") == 0) {
+   } else if (strcmp(http_dat, "POST") == 0) {
       ret->type = HTTP_POST;
+   } else if (strcmp(http_dat, "HEAD") == 0) {
+      ret->type = HTTP_HEAD;
    } else {
-      /* This request type is not implemented. */
-      send(client, html_501_Page, sizeof html_501_Page, MSG_NOSIGNAL);
+      fprintf(stderr, "Regex not behaving as expected. This error should never "
+              "occur\n");
+      exit(1);
+   }
+
+   http_dat += matches[1].rm_eo + 1;
+
+   /* Here we are actually validating the URI stringently, we make sure that   *
+    * it follows a subset of the HTTP/1.0 spec., as well as retrieve the file  *
+    * extension.                                                               */
+
+   if ((sysret = regexec(&http_uri_regex, http_dat, 7, matches, 0)) != 0) {
+      send(client, html_404_Page, sizeof html_404_Page, MSG_NOSIGNAL);
       goto failure;
    }
 
-   tmp_uri = set + 1;
-   *(set = strchr(tmp_uri, ' ')) = '\0';
+   for (i = 0; i < 7; ++i) {
+      fprintf(stderr, "%d: ", i);
+      fwrite(http_dat + matches[i].rm_so,
+             matches[i].rm_eo - matches[i].rm_so, 1, stderr);
+      fputc('\n', stderr);
+   }
 
-   *(set = strstr(set + 1, "\r\n")) = '\0';
+   http_dat[matches[0].rm_eo] = '\0';
+   tmp_uri = http_dat + 1;
 
-   peek = set + 2;
-   *(set = strstr(peek, "\r\n\r\n")) = '\0';
+   tmp_res_type = get_res_type(http_dat + matches[6].rm_so);
 
 
-   
-   /* We'll work some regex magic on this later, for now we just assume       *
-    * blindly that the URI is formatted correctly.   TODO: ADD REGEX SUPPORT  */
+
+   /* Resolves hex escape sequences, for example, %20 -> ' ' */
+   unescape_hex(tmp_uri);
+
    switch (ret->type) {
       case HTTP_GET:
-	 ret->get.uri   = tmp_uri;
-	 ret->get.head  = peek;
-	 break;
+         ret->get.uri       = tmp_uri;
+         ret->get.res_type  = tmp_res_type;
+	 ret->get.head      = tmp_head;
       case HTTP_HEAD:
-	 ret->head.uri  = tmp_uri;
-	 ret->head.head = peek;
-	 break;
+         ret->head.uri      = tmp_uri;
+         ret->head.res_type = tmp_res_type;
+	 ret->head.head     = tmp_head;
       case HTTP_POST:
-	 ret->post.uri  = tmp_uri;
-	 ret->post.head = peek;
-	 ret->post.data = set + 4;
-	 break;
+         ret->post.uri      = tmp_uri;
+         ret->post.res_type = tmp_res_type;
+	 ret->post.head     = tmp_head;
    }
 
    return ret;
 
-   /* These are error conditions, I keep them all in one spot so I can keep   *
-    * things organized and remember what needs to be done on failure.         */
+  not_implemented:
+   send(client, html_501_Page, sizeof html_501_Page, MSG_NOSIGNAL);
   failure:
    free(ret);
   no_mem:
