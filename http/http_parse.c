@@ -157,8 +157,8 @@ http_request * http_read_request(SOCK client) {
    http_dat += matches[1].rm_eo + 1;
 
    /* Here we are actually validating the URI stringently, we make sure that   *
-    * it follows a subset of the HTTP/1.0 spec., as well as retrieve the file  *
-    * extension.                                                               */
+    * it follows a subset of the HTTP/1.0 spec., as well as retrieving the     *
+    * file extension.                                                          */
 
    if ((sysret = regexec(&http_uri_regex, http_dat, 7, matches, 0)) != 0) {
       send(client, html_404_Page, sizeof html_404_Page, MSG_NOSIGNAL);
