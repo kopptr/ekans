@@ -2,6 +2,7 @@
 # Ekans Server Makefile                                 #
 #                                                       #
 # ekans   -- compiles main binary                       #
+# doc     -- builds documentation files                 #
 # clean   -- cleans directories                         #
 # rebuild -- rebuilds whole project                     #
 #                                                       #
@@ -17,10 +18,13 @@ LDFLAGS  = -lpthread
 MAIN = main
 
 MOD  = slist http_parse
-
 TEST = $(patsubst %, test/bin/%.bin, $(MOD))
-
 OBJ  = $(patsubst %, obj/%.o, $(MOD) $(MAIN))
+
+DOC  = spec
+TEX  = $(patsubst %, doc/%.tex, $(DOC))
+PDF  = $(patsubst %, doc/%.pdf, $(DOC))
+
 
 obj/%.o: */%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
@@ -37,8 +41,9 @@ ekans: $(OBJ)
 #test: $(TEST)
 #	
 
+
 clean:
-	rm -f *~ */*~ obj/* ekans
+	rm -f *~ */*~ obj/* ekans doc/*~ doc/*.pdf
 
 rebuild: clean ekans
 	@echo Whole project rebuilt!
