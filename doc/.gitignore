@@ -1,0 +1,3 @@
+# -*- conf -*-
+# Files which git should not worry about
+spec.pdf
