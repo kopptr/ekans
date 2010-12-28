@@ -25,8 +25,6 @@ Ekans is a lightweight webserver designed to quickly serve static content, while
 \subsection{The Ekans Design Mentality}
 Ekans' design follows the mindset of the procedural paradigm. Data and procedures are \emph{distinct} (unlike in object oriented design) and the program is divided into large cohesive modules, rather than small compartmentalized objects.
 
-
-
 \subsection{Understanding Figures}
 The flowcharts and figures throughout this document attempt to follow the same general guidelines for design in order to be as useful as possible. The following are a set of informal rules for the interpretation of figures. Every figure in this document is accompanied by some form of text description, however. This description should always take priority over the following guidelines.
 \subsubsection{Arrows}
@@ -113,6 +111,17 @@ Flowcharts also have colored coded boxes. Each color has a meaning, they are as 
 
 Figure~\ref{fig:agent-dispatch-flow} makes use of all of the principles discussed in this section, and so makes a good practical example.
 
+\subsection{The Ekans Implementation Mentality}
+\subsubsection{Error Handling}
+\emph{stub}
+\subsubsection{Testing}
+\emph{stub}
+\subsubsection{Efficiency}
+\emph{stub}
+
+\subsection{Version Control}
+\emph{stub}
+
 \pagebreak
 
 \section{Overview}
@@ -120,7 +129,7 @@ Figure~\ref{fig:agent-dispatch-flow} makes use of all of the principles discusse
 \subsection{The Main Modules}
 The two main modules of Ekans are known as \emph{dispatch} and the \emph{agent pool}. Dispatch is responsible for establishing connections with new clients and handing them off to agents. The agents handle individual clients one at a time, serving their requests and dealing with errors.
 
-Figure~\ref{fig:agent-dispatch-flow} 
+Figure~\ref{fig:agent-dispatch-flow} illustrates how a client progresses through the system. At the implementation level, dispatch runs in its own POSIX thread, as do each of the agents. As dispatch accepts client connections, it places the resulting sockets onto a locking reader-writers queue. These sockets are then handled in parallel by the agents. Almost \emph{all} of the work done by Ekans occurs in an agent thread.
 
 \begin{figure}[H]
   \begin{center}
@@ -164,6 +173,53 @@ Figure~\ref{fig:agent-dispatch-flow}
   \end{center}\caption{High level interactions of dispatch and the agent pool.}\label{fig:agent-dispatch-flow}
 \end{figure}
 
+\subsection{Dispatch}
+While dispatch has a fairly passive role when the server is actively serving requests, its role is much more active at startup and shutdown. Otherwise, as discussed above, dispatch is simply responsible for listening for incoming client connections and handing sockets off to the agents.
 
+ At startup, dispatch is responsible for initializing the main queue, starting the Python interpreter, and starting all agent threads. Symmetrically, at shutdown dispatch is tasked with freeing all of the resources it allocated at startup, gracefully terminating each of the client threads, and taking down the Python interpreter.
 
+\subsection{The Agent Pool}
+
+The agent pool is simply a thread pool which handles HTTP requests for Ekans. With every request, the agent either retrieves static content and relays it to the client, or invokes a Python subinterpreter and hands over the client socket. Figure~\ref{fig:agent-flow} illustrates in somewhat more detail the process an agent goes through when serving a client.
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{tikzpicture}[
+        bxblue/.style={fill=blue!20,draw=blue!50,thick},
+        bxblack/.style={fill=black!20,draw=black!50,thick}
+      ]
+
+      \draw[->,thick] (-1, 0) -- (0, 0);
+      \draw[thick] (1.5, -.75) -- (1.5, -1.15);
+      \draw[->,thick] (1.5, -1.5)++(-.2475,-.2475) -- (0.25,-2.5) arc (130:180:6.4mm);
+      \draw[->,thick] (1.5, -1.5)++(0.2475,-.2475) -- (2.75,-2.5) arc (50:0:6.4mm);
+      \draw[->,thick] (3, -4.5) -- (3,-5);
+      \draw[->,thick] (3, -6.5) -- (3, -7);
+      \draw[->,thick] (0, -4.5) -- (0, -7);
+      \draw[->,thick] (3.75, -7.25) -- (4.5, -7.25);
+
+      \draw[bxblue]  (0, .75) rectangle (3, -.75);
+      \draw[bxblack] (-4, .25) rectangle (-1, -.25);
+      \draw[fill=white,draw=black,thick] (1.5, -1.5) circle (0.35cm) node {\textbf{?}};
+      \draw[bxblack] (-0.75, -3) rectangle (0.75, -4.5);
+      \draw[bxblack] (3.75, -3) rectangle (2.25, -4.5);
+      \draw[bxblue]  (1.75, -5) rectangle (4.25, -6.5);
+      \draw[bxblue]  (-0.75, -7) rectangle (3.75, -7.5);
+      \draw[bxblack] (4.5, -7) rectangle (7.7, -7.5);
+
+      \path (3.5, -2) node[text centered]  {\texttt{\textbf{*.py}}};
+      \path (-0.5, -1.9) node[text centered, text width=2cm] {\texttt{\textbf{*.html, *.js, ...}}};
+      \path (1.5, 0) node[text width=2.5cm,text centered] {Parse HTTP Header};
+      \path (-2.5,  0) node[text width=3.5cm,text centered] {\emph{HTTP Request}};
+      \path (0, -3.75) node[text width=1.4cm,text centered] {\emph{Static Content}};
+      \path (3.0, -3.75) node[text width=1.4cm,text centered] {\emph{\texttt{POST} Data}};
+      \path (3.0, -5.75) node[text width=2.3cm,text centered] {Python};
+      \path (1.5, -7.25) node[text centered] {Response Builder};
+      \path (6.1, -7.25) node[text centered] {\emph{HTTP Response}};
+
+    \end{tikzpicture}
+  \end{center}\caption{Agent schematic.}\label{fig:agent-flow}
+\end{figure}
+
+When an agent recieves a socket from dispatch, it will read whatever data is waiting on that socket. The agent then verifies that it has recieved a valid HTTP request and figures out what kind of request has been made. Depending on the result, the agent will either start up a Python interpreter or locate the appropriate static content.
 \end{document}
