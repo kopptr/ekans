@@ -9,6 +9,7 @@ static int dec_str(const char * str) {
    int ret = 0;
    for (; *str; ++str) {
       if (*str >= '0' && *str <= '9') {
+	 ret *= 10;
 	 ret += *str - '0';
       }
    }
@@ -35,6 +36,8 @@ void parse_args(int argc, char * argv[]) {
    }next_arg = PENDING;
    /* Port defaults to 80, flag can switch it. */
    sys_cfg.port = "80";
+   /* Number of threads defaults to 15. */
+   sys_cfg.n_threads = 15;
    for (i = 1; i < argc; ++i) {
       if (next_arg == PENDING) {
 	 if (!strcmp(argv[i], "-t") || !strcmp(argv[i], "--threads")) {
