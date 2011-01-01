@@ -17,7 +17,7 @@ LDFLAGS  = -lpthread
 
 MAIN = main
 
-MOD  = slist http_parse tcp
+MOD  = slist http_parse tcp cfg
 TEST = $(patsubst %, test/bin/%.bin, $(MOD))
 OBJ  = $(patsubst %, obj/%.o, $(MOD) $(MAIN))
 
