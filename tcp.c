@@ -1,9 +1,11 @@
+#include <string.h>
+
 #include "tcp.h"
 
 /* This code is largely based off of examples from "Beej's Guide to Network   *
  * Programming."                                                              */
 
-SOCK get_listener(void) {
+SOCK get_listener(const char * port) {
    SOCK sockfd;
    struct addrinfo hints, * servinfo, * p;
    int yes = 1;
@@ -14,7 +16,7 @@ SOCK get_listener(void) {
    hints.ai_socktype = SOCK_STREAM;
    hints.ai_flags    = AI_PASSIVE;
 
-   if ((rv = getaddrinfo(NULL, argv[1], &hints, &servinfo)) != 0) {
+   if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
       return -1;
    }
 
