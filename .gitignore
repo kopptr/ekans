@@ -1,3 +1,5 @@
 # -*- conf -*-
 # Files for git to ignore
 doc/spec.pdf
+ekans
+obj/
