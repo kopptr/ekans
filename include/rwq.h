@@ -17,7 +17,7 @@ typedef struct rwq {
    rwq_node * top, * end;
    pthread_mutex_t mtx;
    pthread_cond_t  cnd;
-   int num_clients;
+   int nbr_clients;
 }rwq;
 
 void rwq_init(void);
