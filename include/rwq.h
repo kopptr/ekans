@@ -11,7 +11,7 @@
 typedef struct rwq_node {
    struct rwq_node * fLink;
    SOCK client;
-}
+}rwq_node;
 
 typedef struct rwq {
    rwq_node * top, * end;
