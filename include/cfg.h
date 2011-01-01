@@ -6,7 +6,7 @@ typedef struct sytem_configs {
    const char * port;
 }system_configs;
 
-void parse_args(int argc, const char * argv[]);
+void parse_args(int argc, char * argv[]);
 
 extern system_configs sys_cfg;
 

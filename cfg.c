@@ -26,7 +26,7 @@ static void print_usage(const char * name) {
 
 /* This procedure is allowed to kill the program. It will print a useage      *
  * statement if it does.                                                      */
-void parse_args(int argc, const char * argv[]) {
+void parse_args(int argc, char * argv[]) {
    int i;
    enum {
       N_THREADS,
@@ -35,7 +35,7 @@ void parse_args(int argc, const char * argv[]) {
    }next_arg = PENDING;
    /* Port defaults to 80, flag can switch it. */
    sys_cfg.port = "80";
-   for (i = 0; i < argc; ++i) {
+   for (i = 1; i < argc; ++i) {
       if (next_arg == PENDING) {
 	 if (!strcmp(argv[i], "-t") || !strcmp(argv[i], "--threads")) {
 	    next_arg = N_THREADS;
