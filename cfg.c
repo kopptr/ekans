@@ -25,15 +25,20 @@ static void print_usage(const char * name) {
 	   "\n     -h       --help     Display this message.", name);
 }
 
+static int validate_decimal(const char * str) {
+   for (; *str; str++) {
+      if (*str < '0' || *str > '9') return 0;
+   }
+   return 1;
+}
+
 /* This procedure is allowed to kill the program. It will print a useage      *
  * statement if it does.                                                      */
 void parse_args(int argc, char * argv[]) {
    int i;
-   enum {
-      N_THREADS,
-      PORT,
-      PENDING
-   }next_arg = PENDING;
+
+   enum arg_type {N_THREADS, PORT, PENDING } next_arg = PENDING;
+
    /* Port defaults to 80, flag can switch it. */
    sys_cfg.port = "80";
    /* Number of threads defaults to 15. */
@@ -56,11 +61,22 @@ void parse_args(int argc, char * argv[]) {
       } else {
 	 switch (next_arg) {
 	    case N_THREADS:
-	       sys_cfg.n_threads = dec_str(argv[i]);
+	       if (validate_decimal(argv[i])) {
+		  sys_cfg.n_threads = dec_str(argv[i]);
+	       } else {
+		  fprintf(stderr, "number of threads must be a positive decimal"
+			  " integer\n");
+		  exit(1);
+	       }
 	       next_arg = PENDING;
 	       break;
 	    case PORT:
-	       sys_cfg.port = argv[i];
+	       if (validate_decimal(argv[i]) && dec_str(argv[i]) < 1 << 16) {
+		  sys_cfg.port = argv[i]; 
+	       } else {
+		  fprintf(stderr, "port number must be a decimal number between"
+			  " 0 and 65535\n");
+	       }
 	       next_arg = PENDING;
 	       break;
 	    default:
