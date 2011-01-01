@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-typedef int SOCK;
+#include "tcp.h"
 
 /* Codes to indicate HTTP request types. */
 typedef enum {
