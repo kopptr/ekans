@@ -11,7 +11,7 @@
 #########################################################
 
 CC       = gcc
-CFLAGS   = -Wall -g -O3 -Iinclude/
+CFLAGS   = -Wall -g -O0 -Iinclude/
 LD       = gcc
 LDFLAGS  = -lpthread
 
