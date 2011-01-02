@@ -1,5 +1,6 @@
 #include "init.h"
 #include "agent.h"
+#include "cfg.h"
 #include "rwq.h"
 #include "tcp.h"
 
