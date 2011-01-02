@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -10,8 +13,8 @@ void http_serve_static(SOCK client, const char * file_name) {
       fprintf(stderr, "Failed to open '%s': error: %s\n", file_name,
 	      strerror(errno));
    } else {
-      while ((rv = read(fd, buff, 512)) > 0) {
-	 send(client, buff, rv, MSG_NOSIGNAL);
+      while ((rv = read(fd, buffer, 512)) > 0) {
+	 send(client, buffer, rv, MSG_NOSIGNAL);
       }
       if (rv == -1) {
 	 fprintf(stderr, "Failed to read from '%s': error: %s\n", file_name,
@@ -24,6 +27,6 @@ void http_serve_static(SOCK client, const char * file_name) {
    }
    if (close(client) == -1) {
 	 fprintf(stderr, "Failed to close client socket: error: %s\n",
-		 file_name, strerror(errno));
+		 strerror(errno));
    }
 }
