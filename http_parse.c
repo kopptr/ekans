@@ -173,7 +173,7 @@ http_request * http_read_request(SOCK client) {
    }
 
    http_dat[matches[0].rm_eo] = '\0';
-   tmp_uri = http_dat + 1;
+   tmp_uri = http_dat + (http_dat[0] == '/' ? 1 : 0);
 
    tmp_res_type = get_res_type(http_dat + matches[6].rm_so);
 
