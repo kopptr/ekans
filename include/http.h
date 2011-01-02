@@ -52,5 +52,7 @@ http_request * http_read_request(SOCK client);
 
 void http_init_regex(void);
 
+void http_serve_static(SOCK client, const char * file_name);
+
 #endif /* http.h */
 
