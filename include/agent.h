@@ -3,4 +3,6 @@
 
 void start_agents(void);
 
+void reap_agents(void);
+
 #endif /* agent.h */
