@@ -9,7 +9,7 @@
  * don't need to make it general at all.                                      */
 
 typedef struct rwq_node {
-   struct rwq_node * fLink;
+   struct rwq_node * next;
    SOCK client;
 }rwq_node;
 

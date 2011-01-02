@@ -4,10 +4,10 @@
 rwq * client_queue = NULL;
 
 void rwq_init(void) {
-   client_queue = malloc(sizeof rwq);
+   client_queue = malloc(sizeof(rwq));
    client_queue->top = client_queue->end = NULL;
    pthread_mutex_init(&client_queue->mtx,  NULL);
-   pthread_cont_init( &client_queue->cnd,  NULL);
+   pthread_cond_init( &client_queue->cnd,  NULL);
    client_queue->nbr_clients = 0;
 }
 
@@ -15,7 +15,7 @@ void rwq_init(void) {
 /* This is the 'writer' aspect of the reader-writers queue. It places a new   *
  * client on the queue.                                                       */
 void rwq_add(SOCK client) {
-   rwq_node * n_client = malloc(sizeof rwq_node);
+   rwq_node * n_client = malloc(sizeof(rwq_node));
    n_client->client = client;
    n_client->next = NULL;
    /* Lock the mutex, then from here on out it's the normal queue algorithm.  */
@@ -52,5 +52,5 @@ SOCK rwq_get(void) {
    r_tmp = client_queue->top;
    client_queue->top = client_queue->top->next;
    client_queue->nbr_clients--;
-   pthread_mutex_unlock(&client->queue->mtx);
+   pthread_mutex_unlock(&client_queue->mtx);
 }
