@@ -14,7 +14,7 @@ static void * agent_main(void * nil) {
    for (;;) {
       client = rwq_get();
       req = http_read_request(client);
-      http_serve_static(client, req->get.uri + 1);
+      http_serve_static(client, req->get.uri);
    }
    pthread_exit(0);
 }
