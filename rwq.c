@@ -53,5 +53,7 @@ SOCK rwq_get(void) {
    client_queue->top = client_queue->top->next;
    client_queue->nbr_clients--;
    pthread_mutex_unlock(&client_queue->mtx);
+   ret = r_tmp->client;
+   free(r_tmp);
    return ret;
 }
