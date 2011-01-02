@@ -35,7 +35,7 @@ void http_init_regex(void) {
       exit(1);
    }
    r = regcomp(&http_uri_regex,
-               "^/((([a-zA-Z0-9.\\-_+]|%[a-fA-F0-9][a-fA-F0-9])+/)"
+               "^/?((([a-zA-Z0-9.\\-_+]|%[a-fA-F0-9][a-fA-F0-9])+/)"
                "*(([a-zA-Z0-9.\\-_+]|%[a-fA-F0-9][a-fA-F0-9])+\\."
                "([a-zA-Z0-9]+)))?",
                REG_EXTENDED);
