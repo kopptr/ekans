@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include "init.h"
 #include "agent.h"
 #include "cfg.h"
@@ -9,9 +12,16 @@ void run_dispatch(void) {
    init_phase_1();
    start_agents();
    init_phase_2();
-   listener = get_listener(sys_cfg.port);
+   if ((listener = get_listener(sys_cfg.port)) == -1) {
+      fprintf(stderr, "Error listening on port '%s': %s.\n"
+	      "Ekans aborting.\n", sys_cfg.port, strerror(errno));
+      exit(1);
+   }
    for (;;) {
-      client = accept(listener, NULL, NULL);
-      rwq_add(client);
+      if ((client = accept(listener, NULL, NULL)) == -1) {
+	 fprintf(stderr, "Error accepting client: %s.\n", strerror(errno));
+      } else {
+	 rwq_add(client);
+      }
    }
 }
