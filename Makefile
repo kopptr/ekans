@@ -17,7 +17,7 @@ LDFLAGS  = -lpthread
 
 MAIN = main
 
-MOD  = slist http_parse tcp cfg agent rwq http dispatch
+MOD  = slist http_parse tcp cfg agent rwq http dispatch init
 TEST = $(patsubst %, test/bin/%.bin, $(MOD))
 OBJ  = $(patsubst %, obj/%.o, $(MOD) $(MAIN))
 
