@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include "tcp.h"
 
+static const char * http_ok = "HTTP/1.0 200 \r\n\r\n";
+
 void http_serve_static(SOCK client, const char * file_name) {
    char buffer[512];
    int fd, rv;
@@ -13,6 +15,9 @@ void http_serve_static(SOCK client, const char * file_name) {
       fprintf(stderr, "Failed to open '%s': error: %s\n", file_name,
 	      strerror(errno));
    } else {
+      /* We use MSG_NOSIGNAL because we don't want SIGPIPE crashing the whole *
+       * server.                                                              */
+      send(client, http_ok, sizeof http_ok, MSG_NOSIGNAL);
       while ((rv = read(fd, buffer, 512)) > 0) {
 	 send(client, buffer, rv, MSG_NOSIGNAL);
       }
