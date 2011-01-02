@@ -20,7 +20,7 @@ void rwq_add(SOCK client) {
    n_client->next = NULL;
    /* Lock the mutex, then from here on out it's the normal queue algorithm.  */
    pthread_mutex_lock(&client_queue->mtx);
-   if (client_queue->end == NULL) {
+   if (client_queue->top == NULL) {
       client_queue->top = client_queue->end = n_client;
    } else {
       client_queue->end->next = n_client;
