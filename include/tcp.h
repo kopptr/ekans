@@ -7,6 +7,6 @@
 
 typedef int SOCK;
 
-SOCK get_listener(const char * );
+SOCK get_listener(const char * port);
 
 #endif /* tcp.h */
