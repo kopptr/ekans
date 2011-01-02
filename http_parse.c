@@ -1,4 +1,4 @@
-#include <stdio.h>
+1;2403;0c#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
@@ -104,7 +104,7 @@ static void unescape_hex(char * str) {
 }
 
 http_request * http_read_request(SOCK client) {
-   int sysret, i, tmp_res_type;
+   int sysret, tmp_res_type;
    http_request * ret;
    char * http_dat, * tmp_uri, ** tmp_head;
    regmatch_t matches[16]; /* We shouldn't need more than this. */
@@ -163,13 +163,6 @@ http_request * http_read_request(SOCK client) {
    if ((sysret = regexec(&http_uri_regex, http_dat, 7, matches, 0)) != 0) {
       send(client, html_404_Page, sizeof html_404_Page, MSG_NOSIGNAL);
       goto failure;
-   }
-
-   for (i = 0; i < 7; ++i) {
-      fprintf(stderr, "%d: ", i);
-      fwrite(http_dat + matches[i].rm_so,
-             matches[i].rm_eo - matches[i].rm_so, 1, stderr);
-      fputc('\n', stderr);
    }
 
    http_dat[matches[0].rm_eo] = '\0';
