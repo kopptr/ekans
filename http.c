@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include "tcp.h"
 
-static const char * http_ok = "HTTP/1.0 200 \r\n\r\n";
+static const char http_ok[] = "HTTP/1.0 200 \r\n\r\n";
 
 void http_serve_static(SOCK client, const char * file_name) {
    char buffer[512];
