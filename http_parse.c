@@ -19,9 +19,8 @@ static char * get_regerror(int errcode, regex_t * compiled) {
    return buffer;
 }
 
-/* DO WORK ALL DAY TOMORROW. YOU HAVE NO EXCUSE TO WORK ON THIS OR PLAY GAMES. *
- * YOU NEED TO FINISH CRYPTOGRAPHY AND PHYSICS TEAM-DESIGN. NO EXCEPTIONS.     */
-
+/* This function initializes the regular expressions we use for validating    *
+ * HTTP requests. It must be called before any requests are served.           */
 void http_init_regex(void) {
    int r;
    char * error;
@@ -47,7 +46,10 @@ void http_init_regex(void) {
    }
 }
 
+/* Figure out what kind of resource was requested. */
+
 static http_res_type get_res_type(char * ext) {
+   int i;
    if (strcmp("html", ext) == 0) {
       return RES_HTML;
    } else if (strcmp("hpy", ext) == 0) {
@@ -63,6 +65,11 @@ static http_res_type get_res_type(char * ext) {
    } else if (strcmp("png", ext) == 0) {
       return RES_PNG;
    } else {
+      for (i = 0; i < sizeof http_txt_ext; ++i) {
+	 if (strcmp(http_txt_ext[i], ext) == 0) {
+	    return RES_TXT;
+	 }
+      }
       return RES_UNKNOWN;
    }
 }
@@ -79,6 +86,8 @@ static void unescape_hex(char * str) {
          } else if (*look_ahead >= 'A' && *look_ahead <= 'F') {
             c = 10 + *look_ahead - 'A';
          } else {
+	    /* I'm not sure what this is, maybe we should just try to recover *
+	     * from the error instead of killing the server?                  */
             fprintf(stderr, "PANIC: %s: %s: line %d\n",
                     __FILE__, __FUNCTION__, __LINE__);
             exit(1);
@@ -91,6 +100,7 @@ static void unescape_hex(char * str) {
          } else if (*look_ahead >= 'A' && *look_ahead <= 'F') {
             c += 10 + *look_ahead - 'A';
          } else {
+	    /* see above. */
             fprintf(stderr, "PANIC: %s: %s: line %d\n",
                     __FILE__, __FUNCTION__, __LINE__);
             exit(1);
