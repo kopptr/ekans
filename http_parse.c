@@ -161,7 +161,7 @@ http_request * http_read_request(SOCK client) {
     * file extension.                                                          */
 
    if ((sysret = regexec(&http_uri_regex, http_dat, 7, matches, 0)) != 0) {
-      send(client, html_404_Page, sizeof html_404_Page, MSG_NOSIGNAL);
+      send(client, html_404_page, html_404_length, MSG_NOSIGNAL);
       goto failure;
    }
 
@@ -193,7 +193,7 @@ http_request * http_read_request(SOCK client) {
    return ret;
 
   not_implemented:
-   send(client, html_501_Page, sizeof html_501_Page, MSG_NOSIGNAL);
+   send(client, html_501_page, html_501_length, MSG_NOSIGNAL);
   failure:
    free(ret);
   no_mem:
