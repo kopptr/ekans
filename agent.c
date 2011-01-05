@@ -10,11 +10,13 @@ static pthread_t * agents;
 
 static void * agent_main(void * nil) {
    SOCK client;
+   char * hdr[16];
+   memset(hdr, 0, sizeof hdr);
    http_request * req;
    for (;;) {
       client = rwq_get();
       req = http_read_request(client);
-      http_serve_static(client, req->get.uri);
+      http_serve_static(client, NULL, req->get.uri);
    }
    pthread_exit(0);
 }

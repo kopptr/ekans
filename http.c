@@ -7,19 +7,25 @@
 #include "html_prefab.h"
 #include "tcp.h"
 
-static const char http_ok[] = "HTTP/1.0 200 \r\n\r\n";
+static const char http_ok[] = "HTTP/1.0 200 \r\n";
 
-void http_serve_static(SOCK client, const char * file_name) {
+void http_serve_static(SOCK client, const char ** hdr, const char * file_name) {
    char buffer[512];
    int fd, rv;
-   /* We use MSG_NOSIGNAL because we don't want SIGPIPE crashing the whole *
-    * server.                                                              */
+   /* We use MSG_NOSIGNAL because we don't want SIGPIPE crashing the whole    *
+    * server.                                                                 */
    if ((fd = open(file_name, O_RDONLY)) == -1) {
       fprintf(stderr, "Failed to open '%s': error: %s\n", file_name,
 	      strerror(errno));
       send(client, html_404_page, html_404_length, MSG_NOSIGNAL);
    } else {
-      send(client, http_ok, sizeof http_ok, MSG_NOSIGNAL);
+      send(client, http_ok, sizeof http_ok - 1, MSG_NOSIGNAL);
+      if (hdr != NULL) {
+	 for (; *hdr != NULL; ++hdr) {
+	    send(client, *hdr, strlen(*hdr), MSG_NOSIGNAL);
+	 }
+      }
+      send(client, "\r\n", 2, MSG_NOSIGNAL);
       while ((rv = read(fd, buffer, 512)) > 0) {
 	 send(client, buffer, rv, MSG_NOSIGNAL);
       }
