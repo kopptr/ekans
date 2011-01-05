@@ -8,6 +8,8 @@
 
 #define false 0
 
+char * http_txt_ext[] = {"c", "h", "txt", "cpp", "cc", "hh", "hpp",
+			 "java", "scm"};
 
 /* This file makes heavy use of the POSIX regular expressions library */
 static regex_t http_req_regex, http_uri_regex;

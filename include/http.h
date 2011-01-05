@@ -47,9 +47,6 @@ typedef enum {
    RES_UNKNOWN
 }http_res_type;
 
-static const char * http_txt_ext[] = {"c", "h", "txt", "cpp", "cc", "hh", "hpp",
-				      "java", "scm"};
-
 /* Reads data off of the 'client' socket and returns HTTP data. On error NULL *
  * is returned, the socket is closed, and errno is potentially set.           */
 http_request * http_read_request(SOCK client);
