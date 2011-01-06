@@ -16,8 +16,6 @@ void http_serve_static(SOCK client, char ** hdr, const char * file_name) {
    /* We use MSG_NOSIGNAL because we don't want SIGPIPE crashing the whole    *
     * server.                                                                 */
    if ((fd = open(file_name, O_RDONLY)) == -1) {
-      fprintf(stderr, "Failed to open '%s': error: %s\n", file_name,
-	      strerror(errno));
       send(client, html_404_page, html_404_length, MSG_NOSIGNAL);
    } else {
       send(client, http_ok, sizeof http_ok - 1, MSG_NOSIGNAL);
