@@ -1,5 +1,7 @@
 /* This is a prepackaged response for 404 requests. */
 const char html_404_page[] = "HTTP/1.0 404 Page Not Found\r\n"
+   "Server: ekans\r\n"
+   "Content-Type: text/html\r\n"
    "\r\n"
    "<!doctype html>\n"
    "<html>\n"
@@ -16,6 +18,8 @@ const int html_404_length = sizeof html_404_page;
 /* Error: Not Implemented. This response gets sent to clients making requests *
  * which are either unsupported HTTP/1.1 methods or just plain malformed.     */
 const char html_501_page[] = "HTTP/1.0 501 Request Method Not Implemented\r\n"
+   "Server: ekans\r\n"
+   "Content-Type: text/html\r\n"
    "\r\n"
    "<!doctype html>\n"
    "<html>\n"
