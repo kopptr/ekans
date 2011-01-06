@@ -4,14 +4,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include "http.h"
 #include "html_prefab.h"
 #include "tcp.h"
 
-static const char http_ok[] = "HTTP/1.0 200 \r\n";
+static const char http_ok[] = "HTTP/1.0 200 OK\r\n";
 
-void http_serve_static(SOCK client, const char ** hdr, const char * file_name) {
+void http_serve_static(SOCK client, char ** hdr, const char * file_name) {
    char buffer[512];
-   int fd, rv;
+   int  fd, rv;
    /* We use MSG_NOSIGNAL because we don't want SIGPIPE crashing the whole    *
     * server.                                                                 */
    if ((fd = open(file_name, O_RDONLY)) == -1) {
@@ -20,10 +21,8 @@ void http_serve_static(SOCK client, const char ** hdr, const char * file_name) {
       send(client, html_404_page, html_404_length, MSG_NOSIGNAL);
    } else {
       send(client, http_ok, sizeof http_ok - 1, MSG_NOSIGNAL);
-      if (hdr != NULL) {
-	 for (; *hdr != NULL; ++hdr) {
-	    send(client, *hdr, strlen(*hdr), MSG_NOSIGNAL);
-	 }
+      for (; *hdr != NULL; ++hdr) {
+	 send(client, *hdr, strlen(*hdr), MSG_NOSIGNAL);
       }
       send(client, "\r\n", 2, MSG_NOSIGNAL);
       while ((rv = read(fd, buffer, 512)) > 0) {
@@ -41,5 +40,29 @@ void http_serve_static(SOCK client, const char ** hdr, const char * file_name) {
    if (close(client) == -1) {
 	 fprintf(stderr, "Failed to close client socket: error: %s\n",
 		 strerror(errno));
+   }
+}
+
+char * http_content_type_hdr(http_res_type res_type) {
+   switch (res_type) {
+      case RES_HTML:
+      case RES_HPYTHON:
+      case RES_PYTHON:
+	 return "Content-Type: text/html\r\n";
+      case RES_CSS:
+	 return "Content-Type: text/css\r\n";
+      case RES_JAVASCRIPT:
+	 return "Content-Type: text/javascript\r\n";
+      case RES_JPEG:
+	 return "Content-Type: image/jpeg\r\n";
+      case RES_GIF:
+	 return "Content-Type: image/gif\r\n";
+      case RES_PNG:
+	 return "Content-Type: image/png\r\n";
+      case RES_TXT:
+	 return "Content-Type: text/plain\r\n";
+      case RES_UNKNOWN:
+      default:
+	 return "Content-Type: application/octet-stream\r\n";
    }
 }

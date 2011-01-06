@@ -42,6 +42,7 @@ typedef enum {
    RES_CSS,
    RES_JAVASCRIPT,
    RES_JPEG,
+   RES_GIF,
    RES_PNG,
    RES_TXT,
    RES_UNKNOWN
@@ -53,7 +54,9 @@ http_request * http_read_request(SOCK client);
 
 void http_init_regex(void);
 
-void http_serve_static(SOCK client, const char ** hdr, const char * file_name);
+void http_serve_static(SOCK client, char ** hdr, const char * file_name);
+
+char * http_content_type_hdr(http_res_type res_type);
 
 #endif /* http.h */
 

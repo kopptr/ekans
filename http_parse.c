@@ -8,8 +8,8 @@
 
 #define false 0
 
-char * http_txt_ext[] = {"c", "h", "txt", "cpp", "cc", "hh", "hpp",
-			 "java", "scm"};
+static const char * http_txt_ext[] = {"c", "h", "txt", "cpp", "cc", "hh", "hpp",
+				      "java", "scm"};
 
 /* This file makes heavy use of the POSIX regular expressions library */
 static regex_t http_req_regex, http_uri_regex;
@@ -67,7 +67,7 @@ static http_res_type get_res_type(char * ext) {
    } else if (strcmp("png", ext) == 0) {
       return RES_PNG;
    } else {
-      for (i = 0; i < sizeof http_txt_ext; ++i) {
+      for (i = 0; i < sizeof http_txt_ext / sizeof(char *); ++i) {
 	 if (strcmp(http_txt_ext[i], ext) == 0) {
 	    return RES_TXT;
 	 }

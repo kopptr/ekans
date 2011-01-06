@@ -9,14 +9,16 @@
 static pthread_t * agents;
 
 static void * agent_main(void * nil) {
-   SOCK client;
-   char * hdr[16];
-   memset(hdr, 0, sizeof hdr);
+   SOCK           client;
    http_request * req;
+   char         * hdr[16];
+   memset(hdr, 0, sizeof hdr);
+   hdr[0] = "Server: ekans\r\n";
    for (;;) {
       client = rwq_get();
       req = http_read_request(client);
-      http_serve_static(client, NULL, req->get.uri);
+      hdr[1] = http_content_type_hdr(req->get.res_type);
+      http_serve_static(client, hdr, req->get.uri);
    }
    pthread_exit(0);
 }
